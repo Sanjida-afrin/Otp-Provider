@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using OtpProvider.WebApi.Data;
+using OtpProvider.WebApi.Entities;
 using WebApi.Practice.DTO;
 using WebApi.Practice.Factory;
 using WebApi.Practice.Model;
@@ -10,11 +12,13 @@ namespace WebApi.Practice.Controllers
     [ApiController]
     public class OtpController : ControllerBase
     {
+        private readonly ApplicationDbContext _context;
         private readonly OtpSenderFactory _factory;
         private readonly EmailServiceFactory _emailFactory;
 
-        public OtpController(OtpSenderFactory factory, EmailServiceFactory emailFactory)
+        public OtpController(ApplicationDbContext context, OtpSenderFactory factory, EmailServiceFactory emailFactory)
         {
+            _context = context;
             _factory = factory;
             _emailFactory = emailFactory;
         }
@@ -26,10 +30,24 @@ namespace WebApi.Practice.Controllers
         }
 
         [HttpPost("send")]
-        public IActionResult Send([FromBody] SendOtpRequest request)
+        public async Task<IActionResult> SendAsync([FromBody] SendOtpRequest request)
         {
             var sender = _factory.GetSender(request.Method);
             sender.SendOtp(request.To, request.Otp);
+           
+            var otpRequest = new OtpRequest
+            {
+                IsSuccessful = true,
+                Method = request.Method,
+                Otp = request.Otp,
+                RequestedAt = DateTime.UtcNow,
+                To = request.To
+            
+            };
+
+            _context.Add(otpRequest);
+            await _context.SaveChangesAsync();
+
             return Ok("OTP Sent");
         }
 

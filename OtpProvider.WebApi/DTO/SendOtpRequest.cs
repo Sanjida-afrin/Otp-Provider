@@ -6,12 +6,12 @@ namespace WebApi.Practice.Model
     {
         // TODO [Task]: Convert to Enum for better validation.
         [Required]
-        public string Method { get; set; }
+        public required string Method { get; set; }
 
         [Required]
-        public string To { get; set; }
+        public required string To { get; set; }
 
         [Required]
-        public string Otp { get; set; }
+        public required string Otp { get; set; }
     }
 }
