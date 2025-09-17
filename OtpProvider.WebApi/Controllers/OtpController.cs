@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using OtpProvider.WebApi.Data;
 using OtpProvider.WebApi.Entities;
 using WebApi.Practice.DTO;
@@ -34,7 +35,7 @@ namespace WebApi.Practice.Controllers
         {
             var sender = _factory.GetSender(request.Method);
             sender.SendOtp(request.To, request.Otp);
-           
+
             var otpRequest = new OtpRequest
             {
                 IsSuccessful = true,
@@ -42,7 +43,7 @@ namespace WebApi.Practice.Controllers
                 Otp = request.Otp,
                 RequestedAt = DateTime.UtcNow,
                 To = request.To
-            
+
             };
 
             _context.Add(otpRequest);
@@ -64,6 +65,14 @@ namespace WebApi.Practice.Controllers
             }
 
             return BadRequest("Bulk email not supported by the current provider.");
+        }
+
+        [HttpGet("otphistory")]
+        public async Task<IActionResult> GetOtpHistory()
+        {
+            
+
+            return Ok(await _context.OtpRequests.ToListAsync());
         }
     }
 }

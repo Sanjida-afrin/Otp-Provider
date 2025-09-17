@@ -6,7 +6,7 @@ using WebApi.Practice.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
+builder.Services.AddControllersWithViews().ConfigureApiBehaviorOptions(options =>
 {
     options.SuppressModelStateInvalidFilter = false;
 });
@@ -34,7 +34,14 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 
+app.UseRouting();
+
 app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}")
+    .WithStaticAssets();
 
 app.MapControllers();
 
