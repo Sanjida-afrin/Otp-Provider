@@ -1,47 +1,67 @@
-using Microsoft.EntityFrameworkCore;
-using OtpProvider.WebApi.Data;
+using System.Text.Json.Serialization;
+using OtpProvider.WebApi.DTO;
 using OtpProvider.WebApi.OtpSender;
 using WebApi.Practice.Factory;
+using WebApi.Practice.Model;
 using WebApi.Practice.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews().ConfigureApiBehaviorOptions(options =>
+
+// Configure Gmail settings
+builder.Services.Configure<GmailSetting>
+    (
+    builder.Configuration.GetSection("GmailSetting"));
+
+// Register OTP senders
+builder.Services.AddScoped<SmsOtpSender>
+    ();
+
+// Register email services as concrete types for the factory
+builder.Services.AddScoped<GmailEmailService>
+    ();
+builder.Services.AddScoped<SendGridEmailService>
+    ();
+
+// Register factories
+builder.Services.AddScoped<EmailServiceFactory>
+    ();
+builder.Services.AddScoped<OtpSenderFactory>
+    ();
+
+// Add controllers with JSON options
+builder.Services.AddControllers()
+.AddJsonOptions(options =>
+{
+    // Allow enum values as strings
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    // Case-insensitive property names
+    options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+})
+.ConfigureApiBehaviorOptions(options =>
 {
     options.SuppressModelStateInvalidFilter = false;
 });
-builder.Services.AddScoped<SmsOtpSender>();
-builder.Services.AddScoped<GmailEmailService>();
-builder.Services.AddScoped<SendGridEmailService>();
-builder.Services.AddScoped<EmailServiceFactory>();
-builder.Services.AddScoped<OtpSenderFactory>();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+// Configure OpenAPI/Swagger
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwaggerUI(options => {
+        options.SwaggerEndpoint("/openapi/v1.json", "OtpProvider.WebApi");
+    });
 }
 
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
 
-app.UseRouting();
-
 app.UseAuthorization();
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
 
 app.MapControllers();
 

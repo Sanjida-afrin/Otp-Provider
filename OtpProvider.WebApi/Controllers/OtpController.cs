@@ -56,7 +56,7 @@ namespace WebApi.Practice.Controllers
         public IActionResult SendBulkEmail([FromBody] BulkEmailRequest request)
         {
             //To-Do [Task]: Take the provider name from the request and use it to get the email service.
-            var emailService = _emailFactory.GetEmailService();
+            //var emailService = _emailFactory.GetEmailService();
 
             if (emailService is IBulkEmailService bulkSender)
             {
